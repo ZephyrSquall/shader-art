@@ -45,7 +45,7 @@ jobs:
           components: clippy, rustfmt
 
       - name: Add WASM & WASI targets
-        run: rustup target add wasm32-unknown-unknown && rustup target add wasm32-wasi
+        run: rustup target add wasm32-unknown-unknown && rustup target add wasm32-wasip1
 
       - name: lint
         run: cargo clippy & cargo fmt
