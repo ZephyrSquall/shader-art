@@ -8,3 +8,6 @@ needs to do is follow a URL to this site.
 
 This repository is my initial test of such a website. If all goes well, I plan to eventually expand
 this repo into a gallery of my shader art.
+
+This website is hosted on Fermyon Cloud. It can be accessed at
+https://zephyrsquallshaderart.fermyon.app/
