@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use web_sys::{
     js_sys,
     wasm_bindgen::{prelude::Closure, JsCast},
-    WebGl2RenderingContext,
+    HtmlImageElement, WebGl2RenderingContext,
 };
 
 #[component]
@@ -13,6 +13,9 @@ pub fn WebGl2Canvas(
 ) -> impl IntoView {
     log!("Vertex shader: {}", vertex_shader_source);
     log!("Fragment shader: {}", fragment_shader_source);
+
+    let image = Rc::new(HtmlImageElement::new().unwrap());
+    image.set_src("watermark.png");
 
     let canvas_ref = NodeRef::<Canvas>::new();
 
@@ -107,6 +110,58 @@ pub fn WebGl2Canvas(
             // Set time uniform
             let time_uniform_location = gl.get_uniform_location(&program, "u_time");
             gl.uniform1f(time_uniform_location.as_ref(), 0.0);
+
+            // Set image texture
+            let texture = gl.create_texture();
+            gl.active_texture(WebGl2RenderingContext::TEXTURE0);
+            gl.bind_texture(WebGl2RenderingContext::TEXTURE_2D, texture.as_ref());
+
+            gl.tex_parameteri(
+                WebGl2RenderingContext::TEXTURE_2D,
+                WebGl2RenderingContext::TEXTURE_WRAP_S,
+                WebGl2RenderingContext::CLAMP_TO_EDGE as i32,
+            );
+            gl.tex_parameteri(
+                WebGl2RenderingContext::TEXTURE_2D,
+                WebGl2RenderingContext::TEXTURE_WRAP_T,
+                WebGl2RenderingContext::CLAMP_TO_EDGE as i32,
+            );
+            gl.tex_parameteri(
+                WebGl2RenderingContext::TEXTURE_2D,
+                WebGl2RenderingContext::TEXTURE_MIN_FILTER,
+                WebGl2RenderingContext::NEAREST as i32,
+            );
+            gl.tex_parameteri(
+                WebGl2RenderingContext::TEXTURE_2D,
+                WebGl2RenderingContext::TEXTURE_MAG_FILTER,
+                WebGl2RenderingContext::NEAREST as i32,
+            );
+
+            let mip_level = 0;
+            let internal_format = WebGl2RenderingContext::RGBA;
+            let src_format = WebGl2RenderingContext::RGBA;
+            let src_type = WebGl2RenderingContext::UNSIGNED_BYTE;
+
+            let image_uniform_location = gl.get_uniform_location(&program, "u_image");
+            gl.uniform1i(image_uniform_location.as_ref(), 0);
+
+            let image_clone = image.clone();
+            let gl_clone = gl.clone();
+            let image_loaded_callback = Closure::<dyn FnMut()>::new(move || {
+                gl_clone.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_html_image_element(
+                WebGl2RenderingContext::TEXTURE_2D,
+                mip_level,
+                internal_format as i32,
+                2998,
+                1025,
+                0,
+                src_format,
+                src_type,
+                &image_clone,
+            );
+            });
+            image.set_onload(Some(image_loaded_callback.as_ref().unchecked_ref()));
+            image_loaded_callback.forget();
 
             // Draw
             let vertices_count = (vertices.len() / 2) as i32;
