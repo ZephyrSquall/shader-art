@@ -14,7 +14,7 @@ pub fn WebGl2Canvas(
     log!("Vertex shader: {}", vertex_shader_source);
     log!("Fragment shader: {}", fragment_shader_source);
 
-    let image = Rc::new(HtmlImageElement::new().unwrap());
+    let image = HtmlImageElement::new().unwrap();
     image.set_src("watermark.png");
 
     let canvas_ref = NodeRef::<Canvas>::new();
@@ -147,18 +147,26 @@ pub fn WebGl2Canvas(
 
             let image_clone = image.clone();
             let gl_clone = gl.clone();
+            let canvas_clone = canvas.clone();
             let image_loaded_callback = Closure::<dyn FnMut()>::new(move || {
                 gl_clone.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_html_image_element(
                 WebGl2RenderingContext::TEXTURE_2D,
                 mip_level,
                 internal_format as i32,
-                2998,
-                1025,
+                image_clone.natural_width() as i32,
+                image_clone.natural_height() as i32,
                 0,
                 src_format,
                 src_type,
                 &image_clone,
-            );
+            ).unwrap();
+                canvas_clone.set_width(image_clone.natural_width());
+                canvas_clone.set_height(image_clone.natural_height());
+                gl_clone.uniform2f(
+                    resolution_uniform_location.as_ref(),
+                    canvas_clone.width() as f32,
+                    canvas_clone.height() as f32,
+                );
             });
             image.set_onload(Some(image_loaded_callback.as_ref().unchecked_ref()));
             image_loaded_callback.forget();
