@@ -118,7 +118,9 @@ pub fn WebGl2Canvas(
             let time_uniform_location = gl.get_uniform_location(&program, "u_time");
             gl.uniform1f(time_uniform_location.as_ref(), 0.0);
 
-            // Set image uniforms
+            // Set image-related uniforms (u_tex[N] and u_tex[N]Resolution)
+            gl.pixel_storei(WebGl2RenderingContext::UNPACK_FLIP_Y_WEBGL, 1);
+
             for (index, image) in images.iter().enumerate() {
                 let texture = gl.create_texture();
                 gl.active_texture(WebGl2RenderingContext::TEXTURE0 + index as u32);
@@ -150,9 +152,12 @@ pub fn WebGl2Canvas(
                 let src_format = WebGl2RenderingContext::RGBA;
                 let src_type = WebGl2RenderingContext::UNSIGNED_BYTE;
 
-                let image_uniform_location =
-                    gl.get_uniform_location(&program, format!("u_image{index}").as_str());
-                gl.uniform1i(image_uniform_location.as_ref(), index as i32);
+                let tex_uniform_location =
+                    gl.get_uniform_location(&program, format!("u_tex{index}").as_str());
+                gl.uniform1i(tex_uniform_location.as_ref(), index as i32);
+
+                let tex_resolution_uniform_location =
+                    gl.get_uniform_location(&program, format!("u_tex{index}Resolution").as_str());
 
                 let image_clone = image.clone();
                 let gl_clone = gl.clone();
@@ -171,12 +176,20 @@ pub fn WebGl2Canvas(
                         src_type,
                         &image_clone,
                     ).unwrap();
+
                     canvas_clone.set_width(image_clone.natural_width());
                     canvas_clone.set_height(image_clone.natural_height());
+
                     gl_clone.uniform2f(
                         resolution_uniform_location_clone.as_ref(),
                         canvas_clone.width() as f32,
                         canvas_clone.height() as f32,
+                    );
+
+                    gl_clone.uniform2f(
+                        tex_resolution_uniform_location.as_ref(),
+                        image_clone.natural_width() as f32,
+                        image_clone.natural_height() as f32,
                     );
                 });
                 image.set_onload(Some(image_loaded_callback.as_ref().unchecked_ref()));

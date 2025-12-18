@@ -14,18 +14,15 @@ fn App() -> impl IntoView {
 
     view! {
         <p>
-            "This is a test of a browser-based GLSL renderer. If it works, a box below should be drawn using your computer's GPU, which is initially green, yellow, black, and red, and periodically flashes blue. This box should also scale itself if you change the window size."
-        </p>
-        <p>
-            "This box should now also contain my watermark, stretched to cover the whole box. There should also be a smaller version of it in the top-left corner."
+            "This is a test of displaying shader art in the browser, running on the user's GPU. If it works, a scene depicting a creature in the ocean should be shown below."
         </p>
         <WebGl2Canvas
             vertex_shader_source=include_str!("test.vert")
-            fragment_shader_source=include_str!("test.frag")
-            image_sources=&["watermark.png", "watermark.png"]
-            style:width="90vw"
-            style:height="80vh"
+            fragment_shader_source=include_str!("ocean_encounter.frag")
+            image_sources=&["image.png", "watermark.png"]
+            style:width="auto"
+            style:height="95vh"
+            style:aspect-ratio="1/1"
         />
-        <img src="watermark.png" />
     }
 }
