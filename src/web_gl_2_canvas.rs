@@ -10,12 +10,19 @@ use web_sys::{
 pub fn WebGl2Canvas(
     vertex_shader_source: &'static str,
     fragment_shader_source: &'static str,
+    image_sources: &'static [&'static str],
 ) -> impl IntoView {
     log!("Vertex shader: {}", vertex_shader_source);
     log!("Fragment shader: {}", fragment_shader_source);
 
-    let image = HtmlImageElement::new().unwrap();
-    image.set_src("watermark.png");
+    let images = image_sources
+        .iter()
+        .map(|image_source| {
+            let image = HtmlImageElement::new().unwrap();
+            image.set_src(image_source);
+            image
+        })
+        .collect::<Vec<_>>();
 
     let canvas_ref = NodeRef::<Canvas>::new();
 
@@ -111,65 +118,70 @@ pub fn WebGl2Canvas(
             let time_uniform_location = gl.get_uniform_location(&program, "u_time");
             gl.uniform1f(time_uniform_location.as_ref(), 0.0);
 
-            // Set image texture
-            let texture = gl.create_texture();
-            gl.active_texture(WebGl2RenderingContext::TEXTURE0);
-            gl.bind_texture(WebGl2RenderingContext::TEXTURE_2D, texture.as_ref());
+            // Set image uniforms
+            for (index, image) in images.iter().enumerate() {
+                let texture = gl.create_texture();
+                gl.active_texture(WebGl2RenderingContext::TEXTURE0 + index as u32);
+                gl.bind_texture(WebGl2RenderingContext::TEXTURE_2D, texture.as_ref());
 
-            gl.tex_parameteri(
-                WebGl2RenderingContext::TEXTURE_2D,
-                WebGl2RenderingContext::TEXTURE_WRAP_S,
-                WebGl2RenderingContext::CLAMP_TO_EDGE as i32,
-            );
-            gl.tex_parameteri(
-                WebGl2RenderingContext::TEXTURE_2D,
-                WebGl2RenderingContext::TEXTURE_WRAP_T,
-                WebGl2RenderingContext::CLAMP_TO_EDGE as i32,
-            );
-            gl.tex_parameteri(
-                WebGl2RenderingContext::TEXTURE_2D,
-                WebGl2RenderingContext::TEXTURE_MIN_FILTER,
-                WebGl2RenderingContext::NEAREST as i32,
-            );
-            gl.tex_parameteri(
-                WebGl2RenderingContext::TEXTURE_2D,
-                WebGl2RenderingContext::TEXTURE_MAG_FILTER,
-                WebGl2RenderingContext::NEAREST as i32,
-            );
-
-            let mip_level = 0;
-            let internal_format = WebGl2RenderingContext::RGBA;
-            let src_format = WebGl2RenderingContext::RGBA;
-            let src_type = WebGl2RenderingContext::UNSIGNED_BYTE;
-
-            let image_uniform_location = gl.get_uniform_location(&program, "u_image");
-            gl.uniform1i(image_uniform_location.as_ref(), 0);
-
-            let image_clone = image.clone();
-            let gl_clone = gl.clone();
-            let canvas_clone = canvas.clone();
-            let image_loaded_callback = Closure::<dyn FnMut()>::new(move || {
-                gl_clone.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_html_image_element(
-                WebGl2RenderingContext::TEXTURE_2D,
-                mip_level,
-                internal_format as i32,
-                image_clone.natural_width() as i32,
-                image_clone.natural_height() as i32,
-                0,
-                src_format,
-                src_type,
-                &image_clone,
-            ).unwrap();
-                canvas_clone.set_width(image_clone.natural_width());
-                canvas_clone.set_height(image_clone.natural_height());
-                gl_clone.uniform2f(
-                    resolution_uniform_location.as_ref(),
-                    canvas_clone.width() as f32,
-                    canvas_clone.height() as f32,
+                gl.tex_parameteri(
+                    WebGl2RenderingContext::TEXTURE_2D,
+                    WebGl2RenderingContext::TEXTURE_WRAP_S,
+                    WebGl2RenderingContext::CLAMP_TO_EDGE as i32,
                 );
-            });
-            image.set_onload(Some(image_loaded_callback.as_ref().unchecked_ref()));
-            image_loaded_callback.forget();
+                gl.tex_parameteri(
+                    WebGl2RenderingContext::TEXTURE_2D,
+                    WebGl2RenderingContext::TEXTURE_WRAP_T,
+                    WebGl2RenderingContext::CLAMP_TO_EDGE as i32,
+                );
+                gl.tex_parameteri(
+                    WebGl2RenderingContext::TEXTURE_2D,
+                    WebGl2RenderingContext::TEXTURE_MIN_FILTER,
+                    WebGl2RenderingContext::NEAREST as i32,
+                );
+                gl.tex_parameteri(
+                    WebGl2RenderingContext::TEXTURE_2D,
+                    WebGl2RenderingContext::TEXTURE_MAG_FILTER,
+                    WebGl2RenderingContext::NEAREST as i32,
+                );
+
+                let mip_level = 0;
+                let internal_format = WebGl2RenderingContext::RGBA;
+                let src_format = WebGl2RenderingContext::RGBA;
+                let src_type = WebGl2RenderingContext::UNSIGNED_BYTE;
+
+                let image_uniform_location =
+                    gl.get_uniform_location(&program, format!("u_image{index}").as_str());
+                gl.uniform1i(image_uniform_location.as_ref(), index as i32);
+
+                let image_clone = image.clone();
+                let gl_clone = gl.clone();
+                let canvas_clone = canvas.clone();
+                let resolution_uniform_location_clone = resolution_uniform_location.clone();
+                let image_loaded_callback = Closure::<dyn FnMut()>::new(move || {
+                    gl_clone.active_texture(WebGl2RenderingContext::TEXTURE0 + index as u32);
+                    gl_clone.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_html_image_element(
+                        WebGl2RenderingContext::TEXTURE_2D,
+                        mip_level,
+                        internal_format as i32,
+                        image_clone.natural_width() as i32,
+                        image_clone.natural_height() as i32,
+                        0,
+                        src_format,
+                        src_type,
+                        &image_clone,
+                    ).unwrap();
+                    canvas_clone.set_width(image_clone.natural_width());
+                    canvas_clone.set_height(image_clone.natural_height());
+                    gl_clone.uniform2f(
+                        resolution_uniform_location_clone.as_ref(),
+                        canvas_clone.width() as f32,
+                        canvas_clone.height() as f32,
+                    );
+                });
+                image.set_onload(Some(image_loaded_callback.as_ref().unchecked_ref()));
+                image_loaded_callback.forget();
+            }
 
             // Draw
             let vertices_count = (vertices.len() / 2) as i32;
