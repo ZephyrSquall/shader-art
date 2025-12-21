@@ -1,7 +1,14 @@
-use leptos::{logging::log, prelude::*};
-use web_gl_2_canvas::WebGl2Canvas;
+use crate::gallery::GalleryRoutes;
+use crate::home::Home;
+use leptos::prelude::*;
+use leptos_router::{
+    components::{Route, Router, Routes},
+    path,
+};
 
-mod web_gl_2_canvas;
+mod components;
+mod gallery;
+mod home;
 
 fn main() {
     console_error_panic_hook::set_once();
@@ -10,19 +17,12 @@ fn main() {
 
 #[component]
 fn App() -> impl IntoView {
-    log!("Starting!");
-
     view! {
-        <p>
-            "This is a test of displaying shader art in the browser, running on the user's GPU. If it works, a scene depicting a creature in the ocean should be shown below."
-        </p>
-        <WebGl2Canvas
-            vertex_shader_source=include_str!("test.vert")
-            fragment_shader_source=include_str!("ocean_encounter.frag")
-            image_sources=&["image.png", "watermark.png"]
-            style:width="auto"
-            style:height="95vh"
-            style:aspect-ratio="1/1"
-        />
+        <Router>
+            <Routes fallback=|| "Page not found.">
+                <Route path=path!("/") view=Home />
+                <GalleryRoutes />
+            </Routes>
+        </Router>
     }
 }
