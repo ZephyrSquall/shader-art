@@ -1,4 +1,5 @@
-use crate::gallery::GalleryRoutes;
+use crate::gallery::Gallery;
+use crate::gallery::{ocean_encounter::OceanEncounter, test::Test};
 use crate::home::Home;
 use leptos::prelude::*;
 use leptos_router::{
@@ -21,7 +22,9 @@ fn App() -> impl IntoView {
         <Router>
             <Routes fallback=|| "Page not found.">
                 <Route path=path!("/") view=Home />
-                <GalleryRoutes />
+                <Route path=path!("gallery") view=Gallery />
+                <Route path=path!("test") view=Test />
+                <Route path=path!("ocean-encounter") view=OceanEncounter />
             </Routes>
         </Router>
     }
