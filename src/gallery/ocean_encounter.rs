@@ -12,6 +12,8 @@ pub fn OceanEncounter() -> impl IntoView {
             vertex_shader_source=include_str!("../../shaders/ocean_encounter/vertex.glsl")
             fragment_shader_source=include_str!("../../shaders/ocean_encounter/fragment.glsl")
             image_sources=&["assets/ocean_encounter/image.png", "assets/watermark.png"]
+            canonical_width=1080
+            canonical_height=1080
             style:width="auto"
             style:height="80vh"
             style:aspect-ratio="1/1"

@@ -12,6 +12,8 @@ pub fn Test() -> impl IntoView {
             vertex_shader_source=include_str!("../../shaders/test/vertex.glsl")
             fragment_shader_source=include_str!("../../shaders/test/fragment.glsl")
             image_sources=&["assets/watermark.png"]
+            canonical_width=2998
+            canonical_height=1025
             style:width="90vw"
             style:height="80vh"
         />

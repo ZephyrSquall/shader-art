@@ -11,6 +11,14 @@ pub fn WebGl2Canvas(
     vertex_shader_source: &'static str,
     fragment_shader_source: &'static str,
     image_sources: &'static [&'static str],
+    // "Canonical width/height" is the width in pixels of a "good" view of the canvas. This differs
+    // from the size the canvas will actually be rendered at; that gets controlled by CSS
+    // properties. Setting the "canonical" values is important because by default, the canvas's
+    // internal height and width are set to really low values, which causes images to be displayed
+    // in very low resolution. In most cases, this is the same resolution that I used to record a
+    // video of the shader art.
+    canonical_width: u32,
+    canonical_height: u32,
 ) -> impl IntoView {
     log!("Vertex shader: {}", vertex_shader_source);
     log!("Fragment shader: {}", fragment_shader_source);
@@ -106,7 +114,10 @@ pub fn WebGl2Canvas(
             );
             gl.enable_vertex_attrib_array(position.try_into().unwrap());
 
-            // Set resolution uniform
+            // Set resolution uniform (also set canvas to canonical width/height to prevent image
+            // blurriness)
+            canvas.set_width(canonical_width);
+            canvas.set_height(canonical_height);
             let resolution_uniform_location = gl.get_uniform_location(&program, "u_resolution");
             gl.uniform2f(
                 resolution_uniform_location.as_ref(),
@@ -161,8 +172,6 @@ pub fn WebGl2Canvas(
 
                 let image_clone = image.clone();
                 let gl_clone = gl.clone();
-                let canvas_clone = canvas.clone();
-                let resolution_uniform_location_clone = resolution_uniform_location.clone();
                 let image_loaded_callback = Closure::<dyn FnMut()>::new(move || {
                     gl_clone.active_texture(WebGl2RenderingContext::TEXTURE0 + index as u32);
                     gl_clone.tex_image_2d_with_i32_and_i32_and_i32_and_format_and_type_and_html_image_element(
@@ -176,15 +185,6 @@ pub fn WebGl2Canvas(
                         src_type,
                         &image_clone,
                     ).unwrap();
-
-                    canvas_clone.set_width(image_clone.natural_width());
-                    canvas_clone.set_height(image_clone.natural_height());
-
-                    gl_clone.uniform2f(
-                        resolution_uniform_location_clone.as_ref(),
-                        canvas_clone.width() as f32,
-                        canvas_clone.height() as f32,
-                    );
 
                     gl_clone.uniform2f(
                         tex_resolution_uniform_location.as_ref(),

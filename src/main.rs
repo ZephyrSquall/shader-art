@@ -1,5 +1,10 @@
 use crate::gallery::Gallery;
-use crate::gallery::{ocean_encounter::OceanEncounter, test::Test};
+use crate::gallery::{
+    bubbleblight::Bubbleblight, eclipse_of_the_sun::EclipseOfTheSun,
+    forest_of_seasons::ForestOfSeasons, guardian_of_dreams::GuardianOfDreams,
+    ocean_encounter::OceanEncounter, stormy_flight::StormyFlight, test::Test,
+    the_tree_elder::TheTreeElder,
+};
 use crate::home::Home;
 use leptos::prelude::*;
 use leptos_router::{
@@ -25,6 +30,12 @@ fn App() -> impl IntoView {
                 <Route path=path!("gallery") view=Gallery />
                 <Route path=path!("test") view=Test />
                 <Route path=path!("ocean-encounter") view=OceanEncounter />
+                <Route path=path!("the-tree-elder") view=TheTreeElder />
+                <Route path=path!("eclipse-of-the-sun") view=EclipseOfTheSun />
+                <Route path=path!("guardian-of-dreams") view=GuardianOfDreams />
+                <Route path=path!("bubbleblight") view=Bubbleblight />
+                <Route path=path!("stormy-flight") view=StormyFlight />
+                <Route path=path!("forest-of-seasons") view=ForestOfSeasons />
             </Routes>
         </Router>
     }
