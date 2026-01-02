@@ -11,12 +11,12 @@ pub fn WebGl2Canvas(
     vertex_shader_source: &'static str,
     fragment_shader_source: &'static str,
     image_sources: &'static [&'static str],
-    // "Canonical width/height" is the width in pixels of a "good" view of the canvas. This differs
-    // from the size the canvas will actually be rendered at; that gets controlled by CSS
-    // properties. Setting the "canonical" values is important because by default, the canvas's
+    // "Canonical width/height" is the width in pixels of a "good" view of the canvas. In most
+    // cases, these are the same width and height that I used to record a video of the shader art.
+    // This differs from the size the canvas will actually be rendered at; that gets controlled by
+    // CSS properties. Setting the "canonical" values is important because by default, the canvas's
     // internal height and width are set to really low values, which causes images to be displayed
-    // in very low resolution. In most cases, this is the same resolution that I used to record a
-    // video of the shader art.
+    // in very low resolution.
     canonical_width: u32,
     canonical_height: u32,
 ) -> impl IntoView {
@@ -202,6 +202,7 @@ pub fn WebGl2Canvas(
             let draw_frame = Rc::new(RefCell::new(None::<Closure<dyn FnMut()>>));
             let draw_first_frame = draw_frame.clone();
 
+            // Closure that will call itself repeatedly to draw each frame.
             *draw_first_frame.borrow_mut() = Some(Closure::new(move || {
                 let milliseconds_elapsed = web_sys::window().unwrap().performance().unwrap().now();
                 log!(
@@ -218,18 +219,25 @@ pub fn WebGl2Canvas(
                 );
                 gl.draw_arrays(WebGl2RenderingContext::TRIANGLES, 0, vertices_count);
 
-                web_sys::window()
-                    .unwrap()
-                    .request_animation_frame(
-                        draw_frame
-                            .borrow()
-                            .as_ref()
-                            .unwrap()
-                            .as_ref()
-                            .unchecked_ref(),
-                    )
-                    .unwrap();
+                // Only call the next frame if the canvas element still exists. This closure would
+                // otherwise call itself forever even after the canvas is gone, causing a memory
+                // leak.
+                if canvas_ref.try_get_untracked().is_some() {
+                    web_sys::window()
+                        .unwrap()
+                        .request_animation_frame(
+                            draw_frame
+                                .borrow()
+                                .as_ref()
+                                .unwrap()
+                                .as_ref()
+                                .unchecked_ref(),
+                        )
+                        .unwrap();
+                }
             }));
+
+            // Call the closure to draw the first frame.
             web_sys::window()
                 .unwrap()
                 .request_animation_frame(
