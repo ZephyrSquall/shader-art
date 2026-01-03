@@ -2,8 +2,8 @@ use crate::gallery::Gallery;
 use crate::gallery::{
     bubbleblight::Bubbleblight, eclipse_of_the_sun::EclipseOfTheSun,
     forest_of_seasons::ForestOfSeasons, guardian_of_dreams::GuardianOfDreams,
-    ocean_encounter::OceanEncounter, stormy_flight::StormyFlight, test::Test,
-    the_tree_elder::TheTreeElder,
+    ocean_encounter::OceanEncounter, stormy_flight::StormyFlight, the_tree_elder::TheTreeElder,
+    web_gl_2_test::WebGl2Test, web_gpu_test::WebGpuTest,
 };
 use crate::home::Home;
 use leptos::prelude::*;
@@ -28,7 +28,8 @@ fn App() -> impl IntoView {
             <Routes fallback=|| "Page not found.">
                 <Route path=path!("/") view=Home />
                 <Route path=path!("gallery") view=Gallery />
-                <Route path=path!("test") view=Test />
+                <Route path=path!("webgl2-test") view=WebGl2Test />
+                <Route path=path!("webgpu-test") view=WebGpuTest />
                 <Route path=path!("ocean-encounter") view=OceanEncounter />
                 <Route path=path!("the-tree-elder") view=TheTreeElder />
                 <Route path=path!("eclipse-of-the-sun") view=EclipseOfTheSun />

@@ -7,8 +7,9 @@ pub mod forest_of_seasons;
 pub mod guardian_of_dreams;
 pub mod ocean_encounter;
 pub mod stormy_flight;
-pub mod test;
 pub mod the_tree_elder;
+pub mod web_gl_2_test;
+pub mod web_gpu_test;
 
 // Some of my shader art ran just fine locally on my computer, but lag heavily once adapted to run
 // in the browser. They are most likely written inefficiently as they were among the first shaders
@@ -20,7 +21,9 @@ pub fn Gallery() -> impl IntoView {
         <p>"This is a gallery."</p>
         <A href="/">"Go to home"</A>
         <br />
-        <A href="/test">"Go to test piece"</A>
+        <A href="/webgl2-test">"Go to WebGL2 test piece"</A>
+        <br />
+        <A href="/webgpu-test">"Go to WebGPU test piece"</A>
         <br />
         <A href="/ocean-encounter">"Go to Ocean Encounter"</A>
         // <br />
